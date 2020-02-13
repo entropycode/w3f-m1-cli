@@ -1,0 +1,8 @@
+{ 
+    "wsEndpoint" : "ws://127.0.0.1:9944",
+    "account" : "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "section" : "feedback",
+    "method" : "poll",
+    "args" : ["title", ["options1", "options2"], 120],
+    "tip" : 2
+}

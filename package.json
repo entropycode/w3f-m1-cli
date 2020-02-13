@@ -1,0 +1,11 @@
+{
+  "name": "create-signed-transaction",
+  "version": "1.0.0",
+  "description": "Creates extrinsic, extrinsic payload, signing and returns signed transactions for substrate",
+  "main": "index.js",
+  "author": "Belsy Yuen",
+  "license": "GPL-3",
+  "dependencies": {
+    "@polkadot/api": "1.0.1"
+  }
+}
