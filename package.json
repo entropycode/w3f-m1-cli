@@ -4,7 +4,7 @@
   "description": "Creates extrinsic, extrinsic payload, signing and returns signed transactions for substrate",
   "main": "index.js",
   "author": "Belsy Yuen",
-  "license": "GPL-3",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@polkadot/api": "1.0.1"
   }
