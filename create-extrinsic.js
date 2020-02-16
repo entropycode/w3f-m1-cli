@@ -19,11 +19,11 @@ async function main() {
     const era = api.createType('ExtrinsicEra',  { current: currentBlock.block.header.number, period: 5 })
     const runtimeVersion = await api.runtimeVersion
     const extrinsicVersion = await api.extrinsicVersion
+    const metadata = await api.rpc.state.getMetadata()
 
     const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
     const methodIndex = Buffer.from(unsignedExtrinsic.callIndex).toString('hex')
     const callData = Buffer.from(unsignedExtrinsic.data).toString('hex')
-
     const signaturePayloadValue = {
         address: input.account,
         blockHash: currentBlock.block.header.hash.toHex(), 
@@ -39,9 +39,10 @@ async function main() {
     const toSignPayload = api.createType('ExtrinsicPayload',  signaturePayloadValue, {version: signaturePayloadValue.version})
     
     const output = {
-        signaturePayload: signaturePayloadValue,
+        metadata: metadata.toHex(),
+        signaturePayload: toSignPayload.toHex(),
         toSign: u8aToHex(toSignPayload.toU8a(true)),
-        unsignedExtrinsic: unsignedExtrinsic,
+        unsignedExtrinsic: unsignedExtrinsic.toHex(),
     }
 
     process.stdout.write(JSON.stringify(output))

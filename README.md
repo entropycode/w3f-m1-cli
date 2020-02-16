@@ -97,9 +97,20 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 
 **NOTE:** Ensure you are using `toSignPayload.toU8a(true)` to create the payload without the length prefix to be signed. 
 
+#### Metadata
+
+When a 'polkadot.js` API instance is to be created, it initialises with the node's metadata, [see details here](https://polkadot.js.org/api/start/basics.html#metadata). For us, we require this in our next step to create the signed transaction without connections to the node.
+
+```
+  const metadata = await api.rpc.state.getMetadata()
+```
+
+#### Output
+
 Now we have all the required information to be signed, we shall output it to the next stage. 
 ```
 const output = {
+  metadata: metadata,
   signaturePayload: signaturePayloadValue,
   toSign: u8aToHex(toSignPayload.toU8a(true)),
   unsignedExtrinsic: unsignedExtrinsic.toHex(),
@@ -111,7 +122,7 @@ const output = {
 We will sign the payload and create a signed transaction in this section with the following [CLI tool](./create-signed-transaction.js): `create-signed-transaction.js`. It will be taking in the output from [create-extrinsic .js](./create-extrinsic.js).  
 
 ```
-./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key] [input-file-path]
+./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key]
 ```
 
 There are multiple ways to sign the extrinsic payload, here we use the polkadot.js [Keyring](https://polkadot.js.org/api/start/keyring.html).
@@ -122,23 +133,20 @@ There are multiple ways to sign the extrinsic payload, here we use the polkadot.
   const signature = keypair.sign(input.toSign);
 ```
 
-The signature is 64 bytes, and it will need to be prefixed by the type of signature it is as multiple types are supported. 
+The signature is 64 bytes, and it will need to be prefixed by the type of signature as specified at the command line as multiple types are supported. 
 
 ```
- 00 - Ed25519 signature
- 01 - Sr25519 signature
- 02 - ECDSA/SECP256k1 signature
+  const curveTypes = { 'ed25519' : '0x00', 'sr25519' : '0x01', '0x02' : 'edcsa'} 
+  const multiSignature = curveTypes[curve] + Buffer.from(signature).toString('hex')
 ```
 
-With the signature ready, we can inject the signature, with the signer's address and payload to create a signed transaction.
-
+With the signature ready, we can use the method [addSignature](https://polkadot.js.org/api/types/classes/_primitive_extrinsic_extrinsic_.extrinsic.html#addsignature) to add it into the unsigned extrinsic to created a signed transaction. To create an extrinsic javascript object from the hex output from the previous step, we need to attach the metadata information to the type registry so that the hex can be decoded / encoded correctly.
 ```
-const unsignedExtrinsic = api.createType('Extrinsic', input.unsignedExtrinsic, {version: input.signaturePayload.version})
-const extrinsicPayload = api.createType('ExtrinsicPayload', input.signaturePayload, {version: input.signaturePayload.version})
-const multiSignature = api.createType('MultiSignature', curveTypes[curve] + Buffer.from(signature).toString('hex'))
+  const registry = new TypeRegistry()
+  new Metadata(registry, input.metadata)
 
-let signedExtrinsic = unsignedExtrinsic.addSignature(input.signaturePayload.address, multiSignature, extrinsicPayload)
-
+  const unsignedExtrinsic = createType(registry, 'Extrinsic', input.unsignedExtrinsic)
+  const signedExtrinsic = unsignedExtrinsic.addSignature(keypair.publicKey, multiSignature, input.signaturePayload)
 ```
 
 The `signedExtrinsic` hex encodes the following information:
@@ -175,5 +183,5 @@ Some transaction specific fields (`era`, `nonce`, `tips`), the signer's account 
 Now that we have the signed transaction, we can submit it to the node with the [author](https://polkadot.js.org/api/substrate/rpc.html#submitandwatchextrinsic-extrinsic-extrinsic-extrinsicstatus) section. We do this simply by piping the signed extrinsic into [sumbit.js](./submit.js)
 
 ```
-./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key] [input-file-path] | ./submit.js [ws-endpoint]
+./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key] | ./submit.js [ws-endpoint]
 ```

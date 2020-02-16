@@ -6,6 +6,6 @@
   "author": "Belsy Yuen",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@polkadot/api": "1.0.1"
+    "@polkadot/api": "1.2.1"
   }
 }
