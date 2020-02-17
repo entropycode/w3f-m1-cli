@@ -2,19 +2,19 @@
 title: "Create Signed Transactions"
 ---
 
-This documentation explains what a signed transaction contains in Substrate. There are many tutorials on building different DApps / DApp side chains with Substrate and tools such as polkadot.js to interact with a substrate node. However, as more developers build on Substrate, we want to dive into what is actually encoded in the extrinsics so that we can create them with new tools /  manually, if required.
+This documentation explains how to use a set of CLI tools to create a signed transaction in Substrate. There are many tutorials on building different DApps / DApp side chains with Substrate and tools such as polkadot.js to interact with a substrate node. However, as more developers build on Substrate, we want to dive into what is actually encoded in the extrinsics so that we can create them with new tools /  manually, if required.
 
  We will be using simple CLI tools to:
 
-- [create an unsigned extrinsic and a signature payload](#create-extrinsic)
-- [create a signed transaction](#create-signed-transaction)
-- [submit the signed transaction](#submit)
+- [create an unsigned extrinsic and a signature payload](#create-extrinsics)
+- [create a signed transaction](#create-signed-transactions)
+- [submit the signed transaction](#submit-signed-extrinsics)
 
-Before we begin, we have prepared a simple pallet, Feedback, to add to our runtime and we will be interacting with it. Details can be found [in another repository]()
+Before we begin, we have prepared a simple pallet, Feedback, to add to our runtime and we will be interacting with it. Details can be found [on github]()
 
 ## Create Extrinsics
 
-We start off by looking into what is being encoded in an unsigned extrinsic, then into an signed transaction. To do this, we want a [simple tool](./create-extrinsic.js) that takes in some data required to create an unsigned extrinsic, outputs data required for for signing in the next stage. _There are comprehensive materials on what an extrinsic is and different types of extrinsics in the [substrate.dev documentations](https://substrate.dev/docs/en/conceptual/node/extrinsics) and we will not cover it here._
+We start off by looking into what is being encoded in an unsigned extrinsic. To do this, we want a [simple tool](./create-extrinsic.js) `create-extrinsic.js` that takes in some data required to create an unsigned extrinsic, outputs data required for for signing in the next stage. _There are comprehensive materials on what an extrinsic is and different types of extrinsics in the [substrate.dev documentations](https://substrate.dev/docs/en/conceptual/node/extrinsics) and we will not cover it here._
 
 ```
 ./create-extrinsic.js [input-file-path]
@@ -36,7 +36,7 @@ The [example input file](./input.json)  has the following fields which are necce
 We shall use polkadot.js to create an unsigned extrinsic. _To get familiar with polkadot.js, go [here](https://polkadot.js.org/api/start/)_
 
 ```
-  const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
+const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
 ```
 
 A hex representation of the extrinsic is obtained by `unsignedExtrinsic.toHex()`. Let's break this down into what is being encoded:
@@ -52,7 +52,15 @@ A hex representation of the extrinsic is obtained by `unsignedExtrinsic.toHex()`
 
 **What is happening behind the scenes?**
 
-When an instance of polkadot.js API is connected to the substrate node, it initialises by retrieving the metadata.  Along with chain and runtime data, a key role of the metadata is to allow the instance to have the information to index the section (Pallet), methods and the types required for encoding the arguments, the last 3 fields in the above `unsignedExtrinsic`. 
+When an instance of polkadot.js API is connected to the substrate node, it initialises by retrieving the metadata.  Along with chain data and runtime data, a key role of the metadata is to allow the instance to have the information to index the section (Pallet), methods and the types required for encoding the arguments, the last 3 fields in the above `unsignedExtrinsic`. 
+
+#### Metadata
+
+We require the metadata in our next step to create the signed transaction without connections to the node, for more details on metadata, [see details here](https://polkadot.js.org/api/start/basics.html#metadata). 
+
+```
+const metadata = await api.rpc.state.getMetadata()
+```
 
 #### Extrinsic Payload
 
@@ -97,14 +105,6 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 
 **NOTE:** Ensure you are using `toSignPayload.toU8a(true)` to create the payload without the length prefix to be signed. 
 
-#### Metadata
-
-When a 'polkadot.js` API instance is to be created, it initialises with the node's metadata, [see details here](https://polkadot.js.org/api/start/basics.html#metadata). For us, we require this in our next step to create the signed transaction without connections to the node.
-
-```
-  const metadata = await api.rpc.state.getMetadata()
-```
-
 #### Output
 
 Now we have all the required information to be signed, we shall output it to the next stage. 
@@ -128,25 +128,25 @@ We will sign the payload and create a signed transaction in this section with th
 There are multiple ways to sign the extrinsic payload, here we use the polkadot.js [Keyring](https://polkadot.js.org/api/start/keyring.html).
 
 ```
-  const keyring = new Keyring({ type: curve })
-  const keypair = keyring.addFromUri(secret)
-  const signature = keypair.sign(input.toSign);
+const keyring = new Keyring({ type: curve })
+const keypair = keyring.addFromUri(secret)
+const signature = keypair.sign(input.toSign);
 ```
 
 The signature is 64 bytes, and it will need to be prefixed by the type of signature as specified at the command line as multiple types are supported. 
 
 ```
-  const curveTypes = { 'ed25519' : '0x00', 'sr25519' : '0x01', '0x02' : 'edcsa'} 
-  const multiSignature = curveTypes[curve] + Buffer.from(signature).toString('hex')
+const curveTypes = { 'ed25519' : '0x00', 'sr25519' : '0x01', '0x02' : 'edcsa'} 
+const multiSignature = curveTypes[curve] + Buffer.from(signature).toString('hex')
 ```
 
-With the signature ready, we can use the method [addSignature](https://polkadot.js.org/api/types/classes/_primitive_extrinsic_extrinsic_.extrinsic.html#addsignature) to add it into the unsigned extrinsic to created a signed transaction. To create an extrinsic javascript object from the hex output from the previous step, we need to attach the metadata information to the type registry so that the hex can be decoded / encoded correctly.
+With the signature ready, we can use the method [addSignature](https://polkadot.js.org/api/types/classes/_primitive_extrinsic_extrinsic_.extrinsic.html#addsignature) to add it into the unsigned extrinsic to created a signed transaction. To create an extrinsic javascript object from the unsigned extrinsic hex input, we need to attach the metadata information to the type registry so that the hex can be decoded / encoded correctly.
 ```
-  const registry = new TypeRegistry()
-  new Metadata(registry, input.metadata)
+const registry = new TypeRegistry()
+new Metadata(registry, input.metadata)
 
-  const unsignedExtrinsic = createType(registry, 'Extrinsic', input.unsignedExtrinsic)
-  const signedExtrinsic = unsignedExtrinsic.addSignature(keypair.publicKey, multiSignature, input.signaturePayload)
+const unsignedExtrinsic = createType(registry, 'Extrinsic', input.unsignedExtrinsic)
+const signedExtrinsic = unsignedExtrinsic.addSignature(keypair.publicKey, multiSignature, input.signaturePayload)
 ```
 
 The `signedExtrinsic` hex encodes the following information:
@@ -176,9 +176,9 @@ _Signing account format_
   - 0xfe: 8 byte Account Index, value to follow.
   - 0xff: 32 byte Account ID, value to follow.
 
-Some transaction specific fields (`era`, `nonce`, `tips`), the signer's account identifier and the signature are the fields added to an unsigned extrinsic to create a signed transaction, along with a new length prefix. All the transaction specific information neccessary to create a signed transaction is given in an extrinsic payload. 
+Some transaction specific fields (`era`, `nonce`, `tips`), the signer's account identifier and the signature are the fields added to an unsigned extrinsic to create a signed transaction, along with a new length prefix. All the transaction specific information neccessary to create a signed transaction is given in an extrinsic payload. Therefore, it is possible to manually create a signed transaction with the extrsinsic payload and a tool that returns the length prefix. 
 
-## Submit signed extrinsic
+## Submit signed extrinsics
 
 Now that we have the signed transaction, we can submit it to the substrate node with the rpc [author](https://github.com/paritytech/substrate/tree/master/client/rpc/src/author) section. We can do this simply by piping the signed extrinsic into [sumbit.js](./submit.js). 
 

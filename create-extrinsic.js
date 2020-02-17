@@ -13,13 +13,15 @@ async function main() {
 
     const wsProvider = new WsProvider(input.wsEndpoint)
     const api = await ApiPromise.create({ provider: wsProvider})
+
+    const metadata = await api.rpc.state.getMetadata()
+    
     const nonce = await api.query.system.accountNonce(input.account)
     const currentBlock = await api.rpc.chain.getBlock()
     const genesisHash = await api.rpc.chain.getBlockHash(0)
     const era = api.createType('ExtrinsicEra',  { current: currentBlock.block.header.number, period: 5 })
     const runtimeVersion = await api.runtimeVersion
     const extrinsicVersion = await api.extrinsicVersion
-    const metadata = await api.rpc.state.getMetadata()
 
     const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
     const methodIndex = Buffer.from(unsignedExtrinsic.callIndex).toString('hex')
