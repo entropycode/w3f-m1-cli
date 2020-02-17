@@ -119,7 +119,7 @@ const output = {
 
 ## Create Signed Transactions
 
-We will sign the payload and create a signed transaction in this section with the following [CLI tool](./create-signed-transaction.js): `create-signed-transaction.js`. It will be taking in the output from [create-extrinsic .js](./create-extrinsic.js).  
+We will sign the payload and create a signed transaction in this section with the following [CLI tool](./create-signed-transaction.js): `create-signed-transaction.js`. It will be taking in the output from [create-extrinsic .js](./create-extrinsic.js). This tool will not be connecting to a node since we have prepared all the required data in our previous step.
 
 ```
 ./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key]
@@ -180,8 +180,8 @@ Some transaction specific fields (`era`, `nonce`, `tips`), the signer's account 
 
 ## Submit signed extrinsic
 
-Now that we have the signed transaction, we can submit it to the node with the [author](https://polkadot.js.org/api/substrate/rpc.html#submitandwatchextrinsic-extrinsic-extrinsic-extrinsicstatus) section. We do this simply by piping the signed extrinsic into [sumbit.js](./submit.js)
+Now that we have the signed transaction, we can submit it to the substrate node with the rpc [author](https://github.com/paritytech/substrate/tree/master/client/rpc/src/author) section. We can do this simply by piping the signed extrinsic into [sumbit.js](./submit.js). 
 
 ```
-./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key] | ./submit.js [ws-endpoint]
+./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-type] [private-key]  | ./submit.js [host] [port]
 ```

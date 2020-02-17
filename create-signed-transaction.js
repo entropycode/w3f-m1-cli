@@ -2,7 +2,8 @@
 const {Keyring} = require ('@polkadot/api')
 const {TypeRegistry, createType, Metadata} = require ('@polkadot/types');
 
-process.stdin.on('data', async function(data) {
+process.stdin.setEncoding("utf8");
+process.stdin.on('data', function(data) {
   const curve = process.argv[2]
   const secret = process.argv[3]
   const input = JSON.parse(data)

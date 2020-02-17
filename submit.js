@@ -1,18 +1,34 @@
 #!/usr/bin/env node
-const { ApiPromise, WsProvider} = require ('@polkadot/api')
+var http = require('http');
+ 
+process.stdin.setEncoding("utf8");
+process.stdin.on('data', function(signedExtrinsic) {
+  const rpcHost = process.argv[2]
+  const rpcPort = process.argv[3]
 
-  process.stdin.setEncoding("utf8");
-  process.stdin.on('data', async function(signedExtrinsic) {
-    const wsEndpoint = process.argv[2]
-    const wsProvider = new WsProvider(wsEndpoint)
-    const api = await ApiPromise.create({ provider: wsProvider})
+  const options = {
+    host: rpcHost,
+    port: rpcPort,
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  }
 
-    api.rpc.author.submitAndWatchExtrinsic(signedExtrinsic, result => {
-      console.log(JSON.stringify(result))
-      if (result.isFinalized) {
-        process.exit(0)
-      } 
+  const req = http.request(options, function(res) {
+    console.log('STATUS: ' + res.statusCode);
+    res.setEncoding('utf8');
+    res.on('data', function (chunk) {
+      console.log('BODY: ' + chunk)
     })
   })
+
+  req.write(JSON.stringify({
+    id: 1,
+    jsonrpc: "2.0",
+    method: "author_submitExtrinsic",
+    params: [signedExtrinsic]
+  }))
+
+  req.end()
+})
 
 
