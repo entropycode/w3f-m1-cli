@@ -1,0 +1,20 @@
+**Prerequisites**
+
+To run this tutorial, please
+1. [Set up local node](https://substrate.dev/docs/en/tutorials/creating-your-first-substrate-chain/setup)
+1. Run local node with `--dev` flag for dev accounts, i.e. `./target/release/node-template --dev`
+
+**Setup CLI**
+1. Run `yarn` to install dependencies
+
+**Usage**
+```
+./create-extrinsic.js [input-file] |./create-signed-transaction.js [curve-type] [private-key] | ./submit.js [host] [port]
+
+```
+
+Example
+```
+./create-extrinsic.js input.json |./create-signed-transaction.js sr25519 0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a | ./submit.js localhost 9933
+```
+_Note:_ Address in input.json and private key here is dev account `//Alice`

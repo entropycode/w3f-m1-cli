@@ -1,6 +1,6 @@
 # Create Signed Transactions
 
-This tutorial explains how to use a set of CLI tools to create a signed transaction in Substrate. There are many tutorials on building different DApps / DApp side chains with Substrate and tools such as polkadot.js to interact with a substrate node. However, as more developers build on Substrate, we want to dive into what is actually encoded in the extrinsics so that we can create them with new tools /  manually, if required.
+This tutorial explains how to use a set of CLI tools to create a signed transaction in Substrate. There are many tutorials on building different DApps / DApp side chains with Substrate and tools such as polkadot.js to interact with a substrate node. However, as more developers build on Substrate, we want to dive into what is actually encoded in the extrinsics so that we can create them with new tools / manually, if required.
 
  We will be using simple CLI tools to:
 
@@ -8,7 +8,9 @@ This tutorial explains how to use a set of CLI tools to create a signed transact
 - [create a signed transaction](#create-signed-transactions)
 - [submit the signed transaction](#submit-signed-extrinsics)
 
-Before we begin, we have prepared a simple pallet, Feedback, to add to our runtime and we will be interacting with it. Details can be found [on github]()
+
+## Setup
+Please refer to [SETUP](./SETUP) for instructions on how to setup your environment for this tutorial.
 
 ## Create Extrinsics
 
@@ -18,16 +20,16 @@ We start off by looking into what is being encoded in an unsigned extrinsic. To 
 ./create-extrinsic.js [input-file-path]
 ```
 
-The [example input file](./input.json)  has the following fields which are neccessary for creating a signed transaction. In this example, we want to create a new poll in our feedback pallet on a node running locally at port 9944. We are going to be signing with the account with SS58 address `5G..QY`
+The [example input file](./input.json)  has the following fields which are neccessary for creating a signed transaction. In this example, we want to transfer some balance from one account `5G..QY` to another account `5F..ty`s on a node running locally at port 9944.
 
 ```
 { 
-  "wsEndpoint" : "ws://127.0.0.1:9944",
-  "account" : "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-  "section" : "feedback",
-  "method" : "poll",
-  "args" : ["Poll Title", ["option1", "option2"], 120],
-  "tip" : 2
+    "wsEndpoint" : "ws://127.0.0.1:9944",
+    "account" : "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+    "section" : "balances",
+    "method" : "transfer",
+    "args" : ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 10],
+    "tip" : 2
 }
 ```
 
@@ -37,20 +39,33 @@ We shall use polkadot.js to create an unsigned extrinsic. _To get familiar with 
 const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
 ```
 
-A hex representation of the extrinsic is obtained by `unsignedExtrinsic.toHex()`. Let's break this down into what is being encoded:
+A hex representation of the extrinsic is obtained by `unsignedExtrinsic.toHex()`. 
 
+```
+0x94040400ff8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a4828
+```
+
+Let's break this down into what is being encoded:
 | code |  encoded |
 |  --:|    --:| 
 | 0x  |  hex prefix|
-| 90  |  Length prefix of the rest of the extrinsic - [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| 94  |  Length prefix of the rest of the extrinsic - [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
 | 04 |  Version information; 1 high bit signed flag, 7 low bit extrinsic version (e.g. 84 is signed extrinsic V4, 04 is unsigned extrinsic V4)
-| 06 |  Section identifier; the index of the section within all sectionss
-| 00 |  Method identifier; the index of the method within the section 
-| 14...00 | Method arguments; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) 
+| 04 |  Section identifier; the index of the section `Balances` within all sections
+| 00 |  Method identifier; the index of the method `transfer` within the section `Balances`
+| ff8e...28 | Method arguments; 
+
+and the Method Arguments:
+| code |  encoded |
+|  --:|    --:| 
+|ff   | Account format indicator |
+| 8eaf...26a48 | Public key from provided SS58 Address |
+| 28  | value of transfer [Compact encoded](https://substrate.dev/docs/en/conceptual/core/
+
 
 **What is happening behind the scenes?**
 
-When an instance of polkadot.js API is connected to the substrate node, it initialises by retrieving the metadata.  Along with chain data and runtime data, a key role of the metadata is to allow the instance to have the information to index the section (Pallet), methods and the types required for encoding the arguments, the last 3 fields in the above `unsignedExtrinsic`. 
+An instance of polkadot.js API is initialised with the metadata from a node, provided or with a provider to a substrate node.  Along with chain data and runtime data, a key role of the metadata is to allow the instance to have the information to index the section, methods and the types required for encoding the arguments, that are the last 3 fields in the above `unsignedExtrinsic`. 
 
 #### Metadata
 
@@ -86,20 +101,23 @@ const toSignPayload = api.createType('ExtrinsicPayload',  signaturePayloadValue,
 
 Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex()` and it is a concatenation of encoded fields. 
 
+```
+0x900400ff8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a482832000008010000003ded6a14293f500687b357386c9fc9c3e93da3b1f3ed84cefcd8209519ca5a31049dcb30b4e117c26fd2e6dfea2c1b8221fd3b0bf912033bb1857ef1db3042b2
+```
+
 | code |  encoded |
 |  --:|   --:| 
 | 0x  |   hex prefix|
-| 8c  |  Length prefix (omitted when it is to be signed) - [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
-| 06 |  Section identifier; the index of the section within all sectionss
+| 90  |  Length prefix (omitted when it is to be signed) - [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| 04 |  Section identifier; the index of the section within all sections
 | 00 |  Method identifier; the index of the method within the section 
-| 14...00 |  Method arguments; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers)
-| 0200    |  Transaction Era; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) | 
-| 9c      |  Acccount nonce; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
-| 08      |  Tip; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| ff8ea...4828 |  Method arguments; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers)
+| 3200    |  Transaction Era; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) | 
+| 00      |  Acccount nonce; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| 08      |  Tip, specified in `input.json`; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
 | 01000000|  Runtime spec version (to confirm) |
-| f2.. 07 |  Genesis blockhash | 
-| 4d.. 2b |  Current blockhash |
-
+| 3d.. 31 |  Genesis blockhash | 
+| 04.. b2 |  Current blockhash |
 
 **NOTE:** Ensure you are using `toSignPayload.toU8a(true)` to create the payload without the length prefix to be signed. 
 
@@ -108,10 +126,10 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 Now we have all the required information to be signed, we shall output it to the next stage. 
 ```
 const output = {
-  metadata: metadata,
-  signaturePayload: signaturePayloadValue,
-  toSign: u8aToHex(toSignPayload.toU8a(true)),
-  unsignedExtrinsic: unsignedExtrinsic.toHex(),
+    metadata: metadata.toHex(),
+    signaturePayload: toSignPayload.toHex(),
+    toSign: u8aToHex(toSignPayload.toU8a(true)),
+    unsignedExtrinsic: unsignedExtrinsic.toHex(),
 }
 ```
 
@@ -152,18 +170,19 @@ The `signedExtrinsic` hex encodes the following information:
 | code |  encoded |
 |  --:|   --:| 
 | 0x  |   hex prefix|
-| 2902  |  Length prefix; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| 2d02  |  Length prefix; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
 | 84 |  Version information; 1 high bit signed flag, 7 low bit extrinsic version (e.g. 84 if signed extrinsic V4) 
 | ff | Signing account address format |
-| d4..7d | Account public key (depending on previous address format) |
+| d4..7d | Public key of signer |
 | 01 | Signature type prefix |
 | 3e..81 | 64 bytes signature |
-| 0200    |  Transaction Era; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) | 
-| 9c      |  Acccount nonce; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
+| 3200    |  Transaction Era; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) | 
+| 08      |  Acccount nonce; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
 | 08      |  Tip; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers) |
-| 06 |  Section identifier; the index of the section within all sectionss
+| 04 |  Section identifier; the index of the section within all sectionss
 | 00 |  Method identifier; the index of the method within the section 
-| 14...00 |  Method arguments; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers)
+| ff8ea...4828 |  Method arguments; [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec#compactgeneral-integers)
+
 
 _Signing account format_
 
