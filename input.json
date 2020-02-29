@@ -1,7 +1,7 @@
 { 
     "wsEndpoint" : "ws://127.0.0.1:9944",
     "account" : "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-    "section" : "balances",
+    "module" : "balances",
     "method" : "transfer",
     "args" : ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 10],
     "tip" : 2

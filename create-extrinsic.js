@@ -23,7 +23,7 @@ async function main() {
     const runtimeVersion = await api.runtimeVersion
     const extrinsicVersion = await api.extrinsicVersion
 
-    const unsignedExtrinsic = api.tx[input.section][input.method](...input.args)
+    const unsignedExtrinsic = api.tx[input.module][input.method](...input.args)
     const methodIndex = Buffer.from(unsignedExtrinsic.callIndex).toString('hex')
     const callData = Buffer.from(unsignedExtrinsic.data).toString('hex')
     const signaturePayloadValue = {
