@@ -4,15 +4,15 @@ const {TypeRegistry, createType, Metadata} = require ('@polkadot/types');
 
 process.stdin.setEncoding("utf8");
 process.stdin.on('data', function(data) {
-  const curve = process.argv[2]
+  const scheme = process.argv[2]
   const secret = process.argv[3]
   const input = JSON.parse(data)
 
-  const keyring = new Keyring({ type: curve })
+  const keyring = new Keyring({ type: scheme })
   const keypair = keyring.addFromUri(secret)
   const signature = keypair.sign(input.toSign)
-  const curveTypes = { 'ed25519' : '0x00', 'sr25519' : '0x01', '0x02' : 'edcsa'} 
-  const multiSignature = curveTypes[curve] + Buffer.from(signature).toString('hex')
+  const signatureTypes = { 'ed25519' : '0x00', 'sr25519' : '0x01', '0x02' : 'edcsa'} 
+  const multiSignature = signatureTypes[scheme] + Buffer.from(signature).toString('hex')
 
   const registry = new TypeRegistry()
   new Metadata(registry, input.metadata)
