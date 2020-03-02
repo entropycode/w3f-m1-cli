@@ -119,7 +119,7 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 |              | 04 |  Module identifier | The index of the module `Balances` within all runtime modules | Big Endian (Hex) |
 |              | 00 |  Method identifier | The index of the method `transfer` within the module `Balances` | Big Endian (Hex) |
 |              | ff8e...28 | Method arguments | The concatenation of the encoded arguments |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec)
-| Extension Data |      |      | Message to be signed | | 
+| Extension Data |      |      | Additional data to be signed | | 
 |                       | 3200 |  Transaction Era | The period defined for moratal transaction to be valid | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/era.rs#L58) | 
 |           | 08      |  Transaction Index | Signer's acccount nonce |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
 |           | 08      |  Tip | Optional; higher tip increase priority of the transaction | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
