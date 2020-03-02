@@ -110,7 +110,7 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 0x900400ff8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a482832000008010000003ded6a14293f500687b357386c9fc9c3e93da3b1f3ed84cefcd8209519ca5a31049dcb30b4e117c26fd2e6dfea2c1b8221fd3b0bf912033bb1857ef1db3042b2
 ```
 
-|Signed Extension Field | Byte | Field | Description | Encapsulation |
+|Layout | Byte | Field | Description | Encapsulation |
 |                    --:|   --:|    --:|          --:|            --:|
 |                       | 0x   |       |   Hex prefix |              |
 | Compact Length        |      |       |  Length prefix of the rest of the extrinsic |
@@ -119,7 +119,7 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 |              | 04 |  Module identifier | The index of the module `Balances` within all runtime modules | Big Endian (Hex) |
 |              | 00 |  Method identifier | The index of the method `transfer` within the module `Balances` | Big Endian (Hex) |
 |              | ff8e...28 | Method arguments | The concatenation of the encoded arguments |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec)
-| Signed Extension Data |      |      | Message to be signed | | 
+| Extension Data |      |      | Message to be signed | | 
 |                       | 3200 |  Transaction Era | The period defined for moratal transaction to be valid | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/era.rs#L58) | 
 |           | 08      |  Transaction Index | Signer's acccount nonce |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
 |           | 08      |  Tip | Optional; higher tip increase priority of the transaction | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
