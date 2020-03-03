@@ -50,10 +50,11 @@ Let's break this down into what is being encoded:
 | Layout | Bytes | Field |  Description | Encapsulation |
 |     --:|    --:|    --:|           --:|            --:| 
 |        | 0x    |       |   Hex prefix |
-| Compact Length |       |  |  Length prefix of the rest of the extrinsic |
+| Length |       |  |  Length prefix of the rest of the extrinsic |
 |        | 94    |  Length prefix |   | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
 | Version |       |         | Version and signing information | |
-|        | 04    | version | 1 byte; 1 high bit signed flag, 7 low bit extrinsic version | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/unchecked_extrinsic.rs#L263) || Encoded Call |    |                    | Encoded call data |  |
+|        | 04    | version | 1 byte; 1 high bit signed flag, 7 low bit extrinsic version | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/unchecked_extrinsic.rs#L263) |
+| Call Data |    |                    | Encoded call data |  |
 |              | 04 |  Module identifier | The index of the module `Balances` within all runtime modules | Big Endian (Hex) |
 |              | 00 |  Method identifier | The index of the method `transfer` within the module `Balances` | Big Endian (Hex) |
 |              | ff8e...28 | Method arguments | The concatenation of the encoded arguments | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
@@ -79,7 +80,7 @@ We require the metadata in our next step to create the signed transaction withou
 const metadata = await api.rpc.state.getMetadata()
 ```
 
-#### Signed Extension Data
+#### Extension Data
 
 In order to create a signed transaction, we will need to add a signature, the signer's address and some other information to the above `unsignedExtrinsic`. 
 
@@ -113,9 +114,9 @@ Similar to the `unsignedExtrinsic`, we can get the hex code `toSignPayload.toHex
 |Layout | Byte | Field | Description | Encapsulation |
 |                    --:|   --:|    --:|          --:|            --:|
 |                       | 0x   |       |   Hex prefix |              |
-| Compact Length        |      |       |  Length prefix of the rest of the extrinsic |
+| Length |      |       |  Length prefix of the rest of the extrinsic |
 |                       | 90   | Length Prefix | | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) | 
-| Encoded Call          |      |       |  Encoded call data | | 
+| Call Data   |      |       |  Encoded call data | | 
 |              | 04 |  Module identifier | The index of the module `Balances` within all runtime modules | Big Endian (Hex) |
 |              | 00 |  Method identifier | The index of the method `transfer` within the module `Balances` | Big Endian (Hex) |
 |              | ff8e...28 | Method arguments | The concatenation of the encoded arguments |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec)
@@ -178,7 +179,7 @@ The `signedExtrinsic` hex encodes the following information:
 | Layout | Bytes | Field |  Description | Encapsulation |
 |     --:|    --:|    --:|           --:|            --:|
 |        | 0x    |       |   Hex prefix |               |
-| Compact Length | |  |  Length prefix of the rest of the extrinsic | |
+| Length | |  |  Length prefix of the rest of the extrinsic | |
 |        | 2d02  | Length prefix  |     |[Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec)|
 | Version |      |      | Version and signing information | |
 |        | 84    | version | 1 byte; 1 high bit signed flag, 7 low bit extrinsic version | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/unchecked_extrinsic.rs#L263) |
@@ -188,11 +189,11 @@ The `signedExtrinsic` hex encodes the following information:
 | Signature |    |      | Signature type prefix | | 
 |           | 01 |  Type prefix | For identifying signature in MultiSignature |  [MultiSignature Enum](https://github.com/paritytech/substrate/blob/pre-v2.0-3e65111/primitives/runtime/src/lib.rs#L174) |
 |           | 3e..81 | Signature | 64 bytes signature from signing the Signed Extension | See [Substrate Cryptography](https://substrate.dev/docs/en/conceptual/cryptography/#public-key-cryptography)|
-| Signed Extension Data |   |   | Message to be signed | | 
+| Extension Data |   |   |  | | 
 |           | 3200    |  Transaction Era | The period defined for moratal transaction to be valid | See [implementation](https://github.com/paritytech/substrate/blob/master/primitives/runtime/src/generic/era.rs#L58) | 
 |           | 08      |  Transaction Index | Signer's acccount nonce |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
 |           | 08      |  Tip | Optional; higher tip increase priority of the transaction | [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec) |
-| Encoded Call |    |                    | Encoded call data | |
+| Call Data |    |                    | Encoded call data | |
 |              | 04 |  Module identifier | The index of the module `Balances` within all runtime modules | Big Endian (Hex) |
 |              | 00 |  Method identifier | The index of the method `transfer` within the module `Balances` | Big Endian (Hex) |
 |              | ff8e...28 | Method arguments | The concatenation of the encoded arguments |  [Compact encoded](https://substrate.dev/docs/en/conceptual/core/codec)
