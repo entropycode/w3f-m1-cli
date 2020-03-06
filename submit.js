@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Copyright © 2019-2020 Entropy Labs
+
 var http = require('http');
  
 process.stdin.setEncoding("utf8");

@@ -216,3 +216,5 @@ Now that we have the signed transaction, we can submit it to the substrate node 
 ```
 ./create-extrinsic.js [input-file-path] | ./create-signed-transaction.js [signature-scheme] [private-key]  | ./submit.js [host] [port]
 ```
+
+Copyright © 2019-2020 Entropy Labs

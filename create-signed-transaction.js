@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Copyright © 2019-2020 Entropy Labs
+
 const {Keyring} = require ('@polkadot/api')
 const {TypeRegistry, createType, Metadata} = require ('@polkadot/types');
 
